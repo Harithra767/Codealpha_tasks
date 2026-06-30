@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>E-Commerce Project</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>🛒 My E-Commerce Store</h1>
+
+<div style="position:absolute; right:10px; top:10px;">
+    <button onclick="logout()">Logout</button>
+    <button onclick="toggleOrders()">My Orders</button>
+</div>
+
+<div id="products"></div>
+
+<h2 style="text-align:center;">Cart</h2>
+<ul id="cart"></ul>
+
+<div style="text-align:center;">
+    <button onclick="placeOrder()" style="background:blue; color:white; padding:10px;">
+        Place Order
+    </button>
+
+    <h3 id="message"></h3>
+</div>
+
+<!-- ORDERS SECTION -->
+<div id="ordersBox" style="display:none; text-align:center; margin-top:20px;">
+    <h2>📦 My Orders</h2>
+    <div id="ordersList"></div>
+</div>
+
+<script src="script.js"></script>
+
+<script>
+
+// LOGIN CHECK
+if(localStorage.getItem("loggedIn") !== "true") {
+    window.location.href = "login.html";
+}
+
+// LOGOUT
+function logout() {
+    localStorage.removeItem("loggedIn");
+    window.location.href = "login.html";
+}
+
+// TOGGLE ORDERS
+function toggleOrders() {
+    let box = document.getElementById("ordersBox");
+
+    if(box.style.display === "none") {
+        box.style.display = "block";
+        showOrders();
+    } else {
+        box.style.display = "none";
+    }
+}
+
+/* ---------------- PLACE ORDER ---------------- */
+function placeOrder() {
+    const msg = document.getElementById("message");
+
+    if(cart.length === 0) {
+        msg.style.color = "red";
+        msg.innerText = "Cart is empty!";
+        return;
+    }
+
+    let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+    let deliveryDays = Math.floor(Math.random() * 3) + 3;
+    let deliveryDate = new Date();
+    deliveryDate.setDate(deliveryDate.getDate() + deliveryDays);
+
+    let order = {
+        id: "ORD" + Math.floor(Math.random() * 100000),
+        items: cart,
+        date: new Date().toLocaleString(),
+        deliveryDate: deliveryDate.toDateString(),
+        status: "Processing"
+    };
+
+    orders.push(order);
+    localStorage.setItem("orders", JSON.stringify(orders));
+
+    cart = [];
+    renderCart();
+
+    msg.style.color = "green";
+    msg.innerText = "🎉 Order Placed Successfully!";
+}
+
+/* ---------------- SHOW ORDERS ---------------- */
+function showOrders() {
+    let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+    let container = document.getElementById("ordersList");
+    container.innerHTML = "";
+
+    if(orders.length === 0) {
+        container.innerHTML = "<p>No orders yet</p>";
+        return;
+    }
+
+    orders.forEach(order => {
+
+        let div = document.createElement("div");
+
+        div.style = `
+            background: white;
+            margin: 10px auto;
+            padding: 15px;
+            width: 340px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            text-align: left;
+        `;
+
+        let total = 0;
+        let itemsHTML = "";
+
+        order.items.forEach(item => {
+            itemsHTML += `<p>🛒 ${item.name} - ₹${item.price}</p>`;
+            total += item.price;
+        });
+
+        let statusColor = order.status === "Delivered" ? "green" : "orange";
+
+        div.innerHTML = `
+            <h3>📦 ${order.id}</h3>
+            ${itemsHTML}
+            <hr>
+            <p>💰 <b>Total Amount:</b> ₹${total}</p>
+            <p>📅 Ordered: ${order.date}</p>
+            <p>🚚 Delivery: ${order.deliveryDate}</p>
+            <p style="color:${statusColor}">
+                ⚡ Status: ${order.status}
+            </p>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+</script>
+
+</body>
+</html>
